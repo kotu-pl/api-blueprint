@@ -40,9 +40,30 @@ In order to auto-generate API method information you should invoke:
 
 > By default, all specs inside `spec/requests/api` are run. You can configure that by creating a [Blueprintfile](#configuration) configuration.
 
-This will generate the `doc/api.md` file with a Markdown documentation ready to compile. If this file already exists, **api-blueprint** will not override it. It will write to `tmp/merge.md` instead so you can merge both existing and generated documentation manually in whatever way you want.
+This will generate the `doc/api.md` file with a Markdown documentation. If this file already exists, **api-blueprint** will not override it. It will write to `tmp/merge.md` instead so you can merge both existing and generated documentation manually in whatever way you want.
 
-Of course, it's just a starting point and you should at least fill in some resource, action and parameter descriptions. But that's a story for the **Compile** module.
+Some reusable pieces of documentation will be placed in `doc/chapters/desc` and `doc/chapters/param` directories in addition. *desc* directory is a place for resource structure preview and methods' descriptions.
+
+Params directory keeps each method's parameters' types and descriptions, you can adjust them by giving better example and comments.
+
+Placeholders from `doc/api.md` markup will be replaced with the ones from *desc*/*param* directories, but you need to divide `api.md` into "chapters" manually and put them into `chapters` directory.
+
+Final `api.md` file (with resources extracted and moved to chapters) should look similar to:
+
+    Title: Example.com API
+
+    Host: http://example.com
+
+    Copyright: Some company name
+
+    <require:chapters/introduction>
+    <require:chapters/changelog>
+    <require:chapters/resource1>
+    <require:chapters/resource2>
+    <require:chapters/resource3>
+    <require:chapters/resource4>
+    <require:chapters/resource5>
+    <require:chapters/errors>
 
 #### Regenerate examples
 
@@ -82,6 +103,8 @@ api:
   blueprint: "doc/api.md"
   html: "doc/api.html"
   deploy: "user@server.com:/home/app/public/api.html"
+  deploy_port: "2022"
+  bypass_params: ['on', 'format']
   naming:
     sessions:
       create: "Sign In"
