@@ -126,9 +126,10 @@ namespace :blueprint do
 
     source = blueprintfile(:write_blueprint => false)['html']
     target = blueprintfile(:write_blueprint => false)['deploy']
+    deploy_port = blueprintfile(:write_blueprint => false)['deploy_port']
 
     if source.present? && target.present?
-      cmd = "scp -q #{source} #{target}"
+      cmd = "scp #{target_port ? "-P #{deploy_port}": ''} -q #{source} #{target}"
 
       puts "\nDeploying to '#{target}'..."
 
