@@ -14,28 +14,30 @@ module ApiBlueprint
   end
 
   def self.blueprintfile(opts = {})
-    file = Rails.root.join("Blueprintfile")
+    @hash ||= begin
+      file = Rails.root.join("Blueprintfile")
 
-    if File.exists?(file)
-      file = YAML.load_file(file)
+      if File.exists?(file)
+        file = YAML.load_file(file)
 
-      if ENV['group']
-        hash = file[ENV['group']] || {}
+        if ENV['group']
+          file[ENV['group']] || {}
+        else
+          file.any? ? file.first[1] : {}
+        end
       else
-        hash = file.any? ? file.first[1] : {}
+        {}
       end
-    else
-      hash = {}
     end
-
-    if opts[:write_blueprint] != false && hash['blueprint'].present? && File.exists?(hash['blueprint'])
-      hash.delete('blueprint')
+    
+    if opts[:write_blueprint] != false && @hash['blueprint'].present? && File.exists?(@hash['blueprint'])
+      @hash.delete('blueprint')
     end
 
     ['spec', 'blueprint', 'html'].each do |param|
-      hash[param] = ENV[param] if ENV[param].present?
+      @hash[param] = ENV[param] if ENV[param].present?
     end
 
-    hash
+    @hash
   end
 end
