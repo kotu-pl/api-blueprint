@@ -53,6 +53,12 @@ module ApiBlueprint::Collect::ControllerHook
 
   def dump_blueprint_around
     yield
+  rescue StandardError => e
+    if respond_to?(:blueprint_rescue_from)
+      blueprint_rescue_from(e)
+    else
+      raise e
+    end
   ensure
     dump_blueprint
   end
