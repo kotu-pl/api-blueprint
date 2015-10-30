@@ -32,7 +32,7 @@ module ApiBlueprint::Collect::ControllerHook
 
     def body
       if input.content_type == 'application/json'
-        if input.body != 'null'
+        unless ['null', ''].include? input.body.strip
           JSON.parse(input.body)
         else
           ""
@@ -66,7 +66,7 @@ module ApiBlueprint::Collect::ControllerHook
       'request' => {
         'path'         => request.path,
         'method'       => in_parser.method,
-        'params'       => in_parser.params,
+        'params'       => in_parser.params.except(*Array(ApiBlueprint.blueprintfile['bypass_params'])),
         'headers'      => in_parser.headers,
         'content_type' => request.content_type,
         'accept'       => request.accept

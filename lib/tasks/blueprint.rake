@@ -1,29 +1,3 @@
-def blueprintfile(opts = {})
-  file = Rails.root.join("Blueprintfile")
-
-  if File.exists?(file)
-    file = YAML.load_file(file)
-
-    if ENV['group']
-      hash = file[ENV['group']] || {}
-    else
-      hash = file.any? ? file.first[1] : {}
-    end
-  else
-    hash = {}
-  end
-
-  if opts[:write_blueprint] != false && hash['blueprint'].present? && File.exists?(hash['blueprint'])
-    hash.delete('blueprint')
-  end
-
-  ['spec', 'blueprint', 'html'].each do |param|
-    hash[param] = ENV[param] if ENV[param].present?
-  end
-
-  hash
-end
-
 def compile(source, target)
   compiler = ApiBlueprint::Compile::Compile.new(:source => source, :target => target, :logger => :stdout)
   compiler.compile
@@ -58,7 +32,7 @@ namespace :blueprint do
 
     desc 'Generate request dumps for specified request spec(s)'
     task :generate => :environment do
-      args = blueprintfile['spec'] || "spec/requests/#{ENV['group'] || 'api'}"
+      args = ApiBlueprint.blueprintfile['spec'] || "spec/requests/#{ENV['group'] || 'api'}"
       opts = { :order => 'default', :format => 'documentation' }
       cmd  = "API_BLUEPRINT_DUMP=1 bundle exec rspec #{opts.map{|k,v| "--#{k} #{v}"}.join(' ')} #{args}"
 
@@ -69,30 +43,30 @@ namespace :blueprint do
 
     desc 'Merge all existing request dumps into single blueprint'
     task :merge => :environment do
-      target = blueprintfile['blueprint'] || Rails.root.join('tmp', 'merge.md')
+      target = ApiBlueprint.blueprintfile['blueprint'] || Rails.root.join('tmp', 'merge.md')
 
-      ApiBlueprint::Collect::Merge.new(:target => target, :logger => :stdout, :naming => blueprintfile['naming']).merge
+      ApiBlueprint::Collect::Merge.new(:target => target, :logger => :stdout, :naming => ApiBlueprint.blueprintfile['naming']).merge
     end
   end
 
   namespace :examples do
     desc 'Clear existing examples in blueprint'
     task :clear => :environment do
-      target = blueprintfile(:write_blueprint => false)['blueprint'] || Rails.root.join('tmp', 'merge.md')
+      target = ApiBlueprint.blueprintfile(:write_blueprint => false)['blueprint'] || Rails.root.join('tmp', 'merge.md')
 
       ApiBlueprint::Collect::Merge.new(:target => target, :logger => :stdout).clear_examples
     end
 
     desc 'Uuse dumps to update examples in blueprint'
     task :update => :environment do
-      target = blueprintfile(:write_blueprint => false)['blueprint'] || Rails.root.join('tmp', 'merge.md')
+      target = ApiBlueprint.blueprintfile(:write_blueprint => false)['blueprint'] || Rails.root.join('tmp', 'merge.md')
 
       ApiBlueprint::Collect::Merge.new(:target => target, :logger => :stdout).update_examples
     end
 
     desc 'Use dumps to replace examples in blueprint'
     task :replace => :environment do
-      target = blueprintfile(:write_blueprint => false)['blueprint'] || Rails.root.join('tmp', 'merge.md')
+      target = ApiBlueprint.blueprintfile(:write_blueprint => false)['blueprint'] || Rails.root.join('tmp', 'merge.md')
 
       ApiBlueprint::Collect::Merge.new(:target => target, :logger => :stdout).clear_examples
       ApiBlueprint::Collect::Merge.new(:target => target, :logger => :stdout).update_examples
@@ -101,16 +75,16 @@ namespace :blueprint do
 
   desc 'Compile the blueprint into complete HTML documentation'
   task :compile => :environment do
-    source = blueprintfile(:write_blueprint => false)['blueprint'] || Rails.root.join('tmp', 'merge.md')
-    target = blueprintfile(:write_blueprint => false)['html'] || source.to_s.sub(/\.md$/, '.html')
+    source = ApiBlueprint.blueprintfile(:write_blueprint => false)['blueprint'] || Rails.root.join('tmp', 'merge.md')
+    target = ApiBlueprint.blueprintfile(:write_blueprint => false)['html'] || source.to_s.sub(/\.md$/, '.html')
 
     compile(source, target)
   end
 
   desc 'Watch for changes in the blueprint and compile it into HTML on every change'
   task :watch => :environment do
-    source = blueprintfile(:write_blueprint => false)['blueprint'] || Rails.root.join('tmp', 'merge.md')
-    target = blueprintfile(:write_blueprint => false)['html'] || source.to_s.sub(/\.md$/, '.html')
+    source = ApiBlueprint.blueprintfile(:write_blueprint => false)['blueprint'] || Rails.root.join('tmp', 'merge.md')
+    target = ApiBlueprint.blueprintfile(:write_blueprint => false)['html'] || source.to_s.sub(/\.md$/, '.html')
 
     files = compile(source, target).partials
 
@@ -124,9 +98,9 @@ namespace :blueprint do
   task :deploy => :environment do
     Rake::Task["blueprint:compile"].execute
 
-    source = blueprintfile(:write_blueprint => false)['html']
-    target = blueprintfile(:write_blueprint => false)['deploy']
-    deploy_port = blueprintfile(:write_blueprint => false)['deploy_port']
+    source = ApiBlueprint.blueprintfile(:write_blueprint => false)['html']
+    target = ApiBlueprint.blueprintfile(:write_blueprint => false)['deploy']
+    deploy_port = ApiBlueprint.blueprintfile(:write_blueprint => false)['deploy_port']
 
     if source.present? && target.present?
       cmd = "scp #{target_port ? "-P #{deploy_port}": ''} -q #{source} #{target}"

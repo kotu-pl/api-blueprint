@@ -12,4 +12,30 @@ module ApiBlueprint
       load 'tasks/blueprint.rake'
     end
   end
+
+  def self.blueprintfile(opts = {})
+    file = Rails.root.join("Blueprintfile")
+
+    if File.exists?(file)
+      file = YAML.load_file(file)
+
+      if ENV['group']
+        hash = file[ENV['group']] || {}
+      else
+        hash = file.any? ? file.first[1] : {}
+      end
+    else
+      hash = {}
+    end
+
+    if opts[:write_blueprint] != false && hash['blueprint'].present? && File.exists?(hash['blueprint'])
+      hash.delete('blueprint')
+    end
+
+    ['spec', 'blueprint', 'html'].each do |param|
+      hash[param] = ENV[param] if ENV[param].present?
+    end
+
+    hash
+  end
 end
