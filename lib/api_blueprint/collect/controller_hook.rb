@@ -66,7 +66,7 @@ module ApiBlueprint::Collect::ControllerHook
       'request' => {
         'path'         => request.path,
         'method'       => in_parser.method,
-        'params'       => in_parser.params.except(*Array(ApiBlueprint.blueprintfile['bypass_params'])),
+        'params'       => in_parser.params.except(*Array(ApiBlueprint.blueprintfile(write_blueprint: false)['bypass_params'])),
         'headers'      => in_parser.headers,
         'content_type' => request.content_type,
         'accept'       => request.accept

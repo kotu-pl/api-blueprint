@@ -14,22 +14,8 @@ module ApiBlueprint
   end
 
   def self.blueprintfile(opts = {})
-    @hash ||= begin
-      file = Rails.root.join("Blueprintfile")
+    @hash = (opts[:force_load] ? load_yaml : @hash) || load_yaml
 
-      if File.exists?(file)
-        file = YAML.load_file(file)
-
-        if ENV['group']
-          file[ENV['group']] || {}
-        else
-          file.any? ? file.first[1] : {}
-        end
-      else
-        {}
-      end
-    end
-    
     if opts[:write_blueprint] != false && @hash['blueprint'].present? && File.exists?(@hash['blueprint'])
       @hash.delete('blueprint')
     end
@@ -39,5 +25,21 @@ module ApiBlueprint
     end
 
     @hash
+  end
+
+  def self.load_yaml
+    file = Rails.root.join("Blueprintfile")
+
+    if File.exists?(file)
+      file = YAML.load_file(file)
+
+      if ENV['group']
+        file[ENV['group']] || {}
+      else
+        file.any? ? file.first[1] : {}
+      end
+    else
+      {}
+    end
   end
 end

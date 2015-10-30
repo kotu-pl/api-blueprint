@@ -100,10 +100,12 @@ class ApiBlueprint::Collect::Merge
 
   def body_content
     library.collect do |resource, actions|
+      renderer.resource = resource
       text = renderer.resource_header(resource)
 
       text += actions.collect do |action, info|
-        text = renderer.action_header(action)
+        renderer.action = action
+        text = renderer.action_header
 
         text += renderer.description_header
         text += renderer.signature(info[:path], info[:method])
